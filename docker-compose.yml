@@ -1,0 +1,89 @@
+name: fast-todo
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-todo}:${POSTGRES_PASSWORD:-todo}@db:5432/${POSTGRES_DB:-todo}
+      REDIS_URL: redis://redis:6379/0
+      SMTP_HOST: smtp4dev
+      SMTP_PORT: "25"
+      SMTP_FROM: ${SMTP_FROM:-noreply@todo.local}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - todo-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: todo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-todo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-todo}
+      POSTGRES_DB: ${POSTGRES_DB:-todo}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-todo} -d ${POSTGRES_DB:-todo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - todo-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: todo-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - todo-net
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    container_name: todo-smtp4dev
+    restart: unless-stopped
+    ports:
+      - "${SMTP4DEV_WEB_PORT:-5000}:80"
+      - "${SMTP_HOST_PORT:-2525}:25"
+    volumes:
+      - smtp4dev_data:/smtp4dev
+    environment:
+      ServerOptions__HostName: smtp4dev
+      ServerOptions__TlsMode: None
+    networks:
+      - todo-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  smtp4dev_data:
+
+networks:
+  todo-net:
+    driver: bridge
