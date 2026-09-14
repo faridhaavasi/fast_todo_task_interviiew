@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 sqlalchemy[asyncio]>=2.0.36
@@ -12,3 +13,21 @@ redis>=5.2.0
 httpx>=0.28.0
 pytest>=8.3.0
 pytest-asyncio>=0.24.0
+=======
+fastapi[all]>0.115,<0.116
+alembic>1.14,<1.15
+bcrypt==4.0.1
+passlib[bcrypt]==1.7.4
+pyjwt
+Faker
+flake8
+pytest
+apscheduler
+fastapi-cache2[redis]
+psycopg2-binary
+fastapi-mail[httpx]
+sentry-sdk[fastapi]
+openai
+pymongo
+celery
+>>>>>>> 428b6cdf20630654770c53747ee5931035296d25
