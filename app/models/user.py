@@ -5,7 +5,7 @@ from app.core.database import Base
 
 class User(Base):
     __tablename__ = "user"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50), nullable=False)
     email = Column(String(50), nullable=False)
     is_active = Column(Boolean, default=True)
